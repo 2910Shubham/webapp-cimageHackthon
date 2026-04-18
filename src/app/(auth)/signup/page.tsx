@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { Lock, Mail, Sparkles, User2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { signupSchema } from "@/lib/validations";
@@ -18,7 +17,7 @@ type FormState = {
 type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 export default function SignupPage() {
-  const router = useRouter();
+  const { status } = useSession();
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
@@ -27,6 +26,12 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      window.location.replace("/dashboard");
+    }
+  }, [status]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -72,17 +77,17 @@ export default function SignupPage() {
       email: parsed.data.email,
       password: parsed.data.password,
       redirect: false,
+      callbackUrl: "/dashboard",
     });
 
     setLoading(false);
 
-    if (!signInResult || signInResult.error) {
+    if (!signInResult || signInResult.error || !signInResult.ok) {
       setFormError("Account created, but automatic sign in failed");
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    window.location.assign(signInResult.url ?? "/dashboard");
   }
 
   return (
