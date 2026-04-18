@@ -64,7 +64,11 @@ export function LoginForm({ googleEnabled }: LoginFormProps) {
       return;
     }
 
-    window.location.assign(result.url ?? "/dashboard");
+    const callbackUrl = searchParams.get("callbackUrl");
+    const nextUrl =
+      callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
+
+    window.location.assign(nextUrl);
   }
 
   async function handleGoogleSignIn() {
