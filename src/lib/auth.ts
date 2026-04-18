@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           image: user.image,
+          role: user.role,
         };
       },
     }),
@@ -67,9 +68,16 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign-in: copy user fields into the JWT
       if (user?.id) {
         token.id = user.id;
+        token.role = user.role ?? "USER";
+      }
+
+      // Allow session updates (e.g. after role change) to refresh the token
+      if (trigger === "update" && session?.role) {
+        token.role = session.role;
       }
 
       return token;
@@ -77,6 +85,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id;
+        session.user.role = (token.role as "SUPERADMIN" | "ADMIN" | "USER") ?? "USER";
       }
 
       return session;

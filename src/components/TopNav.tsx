@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Home, Search, User } from "lucide-react";
+import { Bell, Home, Search, ShieldCheck, User } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { clsx } from "clsx";
 
-const links = [
+const baseLinks = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/notifications", label: "Alerts", icon: Bell },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
+const adminLink = { href: "/admin", label: "Admin", icon: ShieldCheck };
+
 export function TopNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  const isAdminOrAbove = role === "ADMIN" || role === "SUPERADMIN";
+  const links = isAdminOrAbove ? [...baseLinks, adminLink] : baseLinks;
 
   return (
     <header className="hidden border-b border-gray-200 bg-white/90 backdrop-blur lg:block">
@@ -23,7 +30,7 @@ export function TopNav() {
         </Link>
         <nav className="flex items-center gap-2">
           {links.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+            const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
             return (
               <Link
