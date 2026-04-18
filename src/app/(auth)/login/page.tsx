@@ -51,17 +51,21 @@ export default function LoginPage() {
       email: parsed.data.email,
       password: parsed.data.password,
       redirect: false,
+      callbackUrl: "/dashboard",
     });
 
     setLoading(false);
 
-    if (!result || result.error) {
+    if (!result || result.error || !result.ok) {
       setFormError("Invalid email or password");
       return;
     }
 
-    router.push("/dashboard");
+    const nextUrl = result.url ?? "/dashboard";
+
+    router.replace(nextUrl);
     router.refresh();
+    window.location.href = nextUrl;
   }
 
   async function handleGoogleSignIn() {
@@ -133,15 +137,17 @@ export default function LoginPage() {
             <Button type="submit" fullWidth loading={loading}>
               Sign in
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              loading={googleLoading}
-              onClick={handleGoogleSignIn}
-            >
-              Continue with Google
-            </Button>
+            <div className="hidden lg:block">
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                loading={googleLoading}
+                onClick={handleGoogleSignIn}
+              >
+                Continue with Google
+              </Button>
+            </div>
           </form>
 
           <p className="text-center text-sm text-gray-500 lg:text-left">
