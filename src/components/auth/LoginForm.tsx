@@ -2,7 +2,6 @@
 
 import { Mail, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -17,10 +16,15 @@ type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 type LoginFormProps = {
   googleEnabled: boolean;
+  callbackUrl?: string;
+  oauthError?: string;
 };
 
-export function LoginForm({ googleEnabled }: LoginFormProps) {
-  const searchParams = useSearchParams();
+export function LoginForm({
+  googleEnabled,
+  callbackUrl,
+  oauthError,
+}: LoginFormProps) {
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
@@ -64,7 +68,6 @@ export function LoginForm({ googleEnabled }: LoginFormProps) {
       return;
     }
 
-    const callbackUrl = searchParams.get("callbackUrl");
     const nextUrl =
       callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
 
@@ -76,7 +79,6 @@ export function LoginForm({ googleEnabled }: LoginFormProps) {
     await signIn("google", { callbackUrl: "/dashboard" });
   }
 
-  const oauthError = searchParams.get("error");
   const activeError =
     formError || (oauthError ? "Unable to complete sign in. Please try again." : "");
 

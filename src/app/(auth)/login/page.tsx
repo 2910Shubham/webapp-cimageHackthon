@@ -3,7 +3,16 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { isGoogleAuthEnabled } from "@/lib/auth";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    callbackUrl?: string;
+    error?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = (await searchParams) ?? {};
+
   return (
     <AuthShell
       title="Hackathon App"
@@ -20,7 +29,11 @@ export default function LoginPage() {
         </>
       }
     >
-      <LoginForm googleEnabled={isGoogleAuthEnabled} />
+      <LoginForm
+        googleEnabled={isGoogleAuthEnabled}
+        callbackUrl={params.callbackUrl}
+        oauthError={params.error}
+      />
     </AuthShell>
   );
 }
