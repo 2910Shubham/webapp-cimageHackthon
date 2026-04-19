@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────────────────────
+// Auth Models (NextAuth)
+// ─────────────────────────────────────────────────────────────
+
 enum Role {
   SUPERADMIN
   ADMIN
@@ -41,6 +45,7 @@ model Account {
   id_token          String? @db.Text
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -50,4 +55,106 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────
+// VMS Models — Intelligent Visitor Management System
+// ─────────────────────────────────────────────────────────────
+
+enum VisitStatus {
+  PENDING
+  APPROVED
+  CHECKED_IN
+  CHECKED_OUT
+  OVERSTAYED
+  DENIED
+}
+
+/// Campus visitor who registers for entry
+model Visitor {
+  id            String      @id @default(uuid())
+  fullName      String
+  email         String      @unique
+  phone         String
+  photoUrl      String?
+  isBlacklisted Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  visits    Visit[]
+  blacklist Blacklist?
+}
+
+/// Host is the person the visitor is coming to meet
+model Host {
+  id         String   @id @default(uuid())
+  name       String
+  department String
+  email      String   @unique
+  phone      String
+  createdAt  DateTime @default(now())
+
+  visits Visit[]
+}
+
+/// Physical gate/entry point on campus
+model Gate {
+  id       String  @id @default(uuid())
+  name     String
+  location String
+  isActive Boolean @default(true)
+
+  visits Visit[]
+}
+
+/// A single visit record — the core entity
+model Visit {
+  id           String      @id @default(uuid())
+  visitorId    String
+  hostId       String
+  gateId       String?
+  purpose      String
+  status       VisitStatus @default(PENDING)
+  qrToken      String      @unique @default(uuid())
+  otp          String      @db.VarChar(6)
+  scheduledAt  DateTime
+  checkedInAt  DateTime?
+  checkedOutAt DateTime?
+  expectedOut  DateTime?
+  createdAt    DateTime    @default(now())
+
+  visitor  Visitor    @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  host     Host       @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  gate     Gate?      @relation(fields: [gateId], references: [id], onDelete: SetNull)
+  auditLogs AuditLog[]
+
+  @@index([visitorId])
+  @@index([status])
+  @@index([checkedInAt])
+  @@index([qrToken])
+}
+
+/// Immutable audit trail for every action on a visit
+model AuditLog {
+  id        String   @id @default(uuid())
+  visitId   String
+  action    String
+  actorId   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+}
+
+/// Blacklisted visitors are denied entry
+model Blacklist {
+  id        String    @id @default(uuid())
+  visitorId String    @unique
+  reason    String
+  addedBy   String
+  addedAt   DateTime  @default(now())
+  expiresAt DateTime?
+
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
 }
