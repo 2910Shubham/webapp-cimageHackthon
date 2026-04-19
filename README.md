@@ -16,6 +16,30 @@ mobile-first, PWA-ready, and Docker-deployable with a complete CI/CD pipeline.*
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma)](https://prisma.io)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
+---
+
+### 👨‍💻 Developed by
+
+**Shubham Kumar Mishra**
+*Patna College*
+
+---
+
+### 🔗 Live Demo
+
+| Resource | Link |
+|---|---|
+| 🔍 Swagger API Docs | [webapp-cimage-hackthon.vercel.app/api/docs](https://webapp-cimage-hackthon.vercel.app/api/docs) |
+| 🛡️ User  | [webapp-cimage-hackthon.vercel.app/](https://webapp-cimage-hackthon.vercel.app/) |
+| 🛡️ Guard Portal (Test Login) | [webapp-cimage-hackthon.vercel.app/guard/login](https://webapp-cimage-hackthon.vercel.app/guard/login) |
+
+**Seeded Guard Credentials for Testing:**
+
+| Email | Password |
+|---|---|
+| `guard1@campus.edu` | `guard@123` |
+| `guard2@campus.edu` | `guard@123` |
+
 </div>
 
 ---
@@ -23,16 +47,16 @@ mobile-first, PWA-ready, and Docker-deployable with a complete CI/CD pipeline.*
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
-2. [Solution Architecture](#2-solution-architecture)
-3. [Entity-Relationship Data Model](#3-entity-relationship-data-model)
-4. [Tech Stack](#4-tech-stack)
-5. [Features & Personas](#5-features--personas)
-6. [Frontend Pages](#6-frontend-pages)
-7. [REST API Reference](#7-rest-api-reference)
-8. [Redis Cache Design](#8-redis-cache-design)
-9. [CI/CD Pipeline](#9-cicd-pipeline)
-10. [Docker & Containerisation](#10-docker--containerisation)
-11. [Local Development Setup](#11-local-development-setup)
+2. [Quick Start — Local Setup](#2-quick-start--local-setup)
+3. [Solution Architecture](#3-solution-architecture)
+4. [Entity-Relationship Data Model](#4-entity-relationship-data-model)
+5. [Tech Stack](#5-tech-stack)
+6. [Features & Personas](#6-features--personas)
+7. [Frontend Pages](#7-frontend-pages)
+8. [REST API Reference](#8-rest-api-reference)
+9. [Redis Cache Design](#9-redis-cache-design)
+10. [CI/CD Pipeline](#10-cicd-pipeline)
+11. [Docker & Containerisation](#11-docker--containerisation)
 12. [Environment Variables](#12-environment-variables)
 13. [Project Structure](#13-project-structure)
 14. [Security & Edge Cases](#14-security--edge-cases)
@@ -61,16 +85,96 @@ mobile-first, PWA-ready, and Docker-deployable with a complete CI/CD pipeline.*
 | Criterion | Where |
 |---|---|
 | ✅ Data modelling | 9 Prisma models, normalised schema, UUID PKs |
-| ✅ ER diagram | [Section 3](#3-entity-relationship-data-model) |
-| ✅ Architecture diagram | [Section 2](#2-solution-architecture) |
-| ✅ CI/CD pipeline | [Section 9](#9-cicd-pipeline) |
+| ✅ ER diagram | [Section 4](#4-entity-relationship-data-model) |
+| ✅ Architecture diagram | [Section 3](#3-solution-architecture) |
+| ✅ CI/CD pipeline | [Section 10](#10-cicd-pipeline) |
 | ✅ REST API + Swagger | 10 endpoints + live Swagger UI at `/api/docs` |
 | ✅ Frontend persona | Full visitor journey (4 pages) + guard portal (5 pages) |
 | ✅ Dockerisable | Multi-stage `Dockerfile` + `docker-compose.yml` |
 
 ---
 
-## 2. Solution Architecture
+## 2. Quick Start — Local Setup
+
+### Prerequisites
+
+- Node.js 20+
+- npm 10+
+- A [Neon](https://neon.tech) PostgreSQL database (free tier)
+- An [Upstash](https://upstash.com) Redis database (free tier)
+
+### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/cimage-hackathon.git
+cd cimage-hackathon/web-app
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment variables
+cp .env.example .env
+# Open .env and fill in all values (see below)
+
+# 4. Initialise the database
+npx prisma generate
+npx prisma db push
+
+# 5. Seed sample data (hosts, gates, visitors)
+npx prisma db seed
+
+# 6. Start the development server
+npm run dev
+# → App running at http://localhost:3000
+```
+
+### Environment Variables (`.env`)
+
+Create a `.env` file in the project root with the following keys:
+
+```env
+# ── Database ──────────────────────────────────────────────────────────
+DATABASE_URL=postgresql://user:pass@host/vms?sslmode=require
+
+# ── NextAuth ───────────────────────────────────────────────────────────
+NEXTAUTH_SECRET=generate-with-openssl-rand-base64-32
+NEXTAUTH_URL=http://localhost:3000
+
+# ── Google OAuth (optional — removes Google button if left empty) ──────
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# ── Upstash Redis (required for OTP & active visitor tracking) ─────────
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=AXxx...
+```
+
+> **Tip:** Generate `NEXTAUTH_SECRET` with:
+> ```bash
+> openssl rand -base64 32
+> ```
+
+### npm scripts
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Start dev server with hot reload |
+| `npm run build` | Production build |
+| `npm run start` | Run production build |
+| `npm run lint` | ESLint checks |
+
+### Useful Prisma commands
+
+```bash
+npx prisma studio          # GUI to browse & edit database records
+npx prisma migrate reset   # ⚠ Wipe and re-apply migrations (dev only)
+npx prisma db push         # Push schema changes without a migration file
+```
+
+---
+
+## 3. Solution Architecture
 
 ### Three-Tier Architecture
 
@@ -152,7 +256,7 @@ Browser / Mobile App
 
 ---
 
-## 3. Entity-Relationship Data Model
+## 4. Entity-Relationship Data Model
 
 ### ER Diagram
 
@@ -242,7 +346,7 @@ PENDING → APPROVED → CHECKED_IN → CHECKED_OUT
 
 ---
 
-## 4. Tech Stack
+## 5. Tech Stack
 
 | Layer | Technology | Version | Rationale |
 |---|---|---|---|
@@ -266,7 +370,7 @@ PENDING → APPROVED → CHECKED_IN → CHECKED_OUT
 
 ---
 
-## 5. Features & Personas
+## 6. Features & Personas
 
 ### Visitor (Web UI)
 - Pre-register from any device (mobile-first, PWA installable)
@@ -290,7 +394,7 @@ PENDING → APPROVED → CHECKED_IN → CHECKED_OUT
 
 ---
 
-## 6. Frontend Pages
+## 7. Frontend Pages
 
 ### Visitor Pages (Public)
 
@@ -327,9 +431,10 @@ PENDING → APPROVED → CHECKED_IN → CHECKED_OUT
 
 ---
 
-## 7. REST API Reference
+## 8. REST API Reference
 
-> Interactive Swagger UI: **`/api/docs`** · OpenAPI JSON: **`/api/docs/spec`**
+> 🔗 **Interactive Swagger UI:** [webapp-cimage-hackthon.vercel.app/api/docs](https://webapp-cimage-hackthon.vercel.app/api/docs)
+> OpenAPI JSON: **`/api/docs/spec`**
 
 ### Consistent response shapes
 
@@ -520,7 +625,7 @@ Regenerate a new OTP when expired (`id` = `visitId`).
 
 ---
 
-## 8. Redis Cache Design
+## 9. Redis Cache Design
 
 | Key Pattern | Type | TTL | Purpose |
 |---|---|---|---|
@@ -533,7 +638,7 @@ Redis is queried **before** Postgres on every check-in and blacklist lookup — 
 
 ---
 
-## 9. CI/CD Pipeline
+## 10. CI/CD Pipeline
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -579,7 +684,7 @@ Redis is queried **before** Postgres on every check-in and blacklist lookup — 
 
 ---
 
-## 10. Docker & Containerisation
+## 11. Docker & Containerisation
 
 ### Multi-stage `Dockerfile`
 
@@ -632,60 +737,6 @@ open http://localhost:3000
 docker build -t vms .
 docker run -p 3000:3000 --env-file .env vms
 ```
-
----
-
-## 11. Local Development Setup
-
-### Prerequisites
-
-- Node.js 20+
-- npm 10+
-- A [Neon](https://neon.tech) PostgreSQL database (free tier)
-- An [Upstash](https://upstash.com) Redis database (free tier)
-
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/cimage-hackathon.git
-cd cimage-hackathon/web-app
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your DATABASE_URL, NEXTAUTH_SECRET, Upstash keys, etc.
-
-# 4. Initialise database
-npx prisma generate
-npx prisma db push
-
-# 5. Seed sample data
-npx prisma db seed
-
-# 6. Start development server
-npm run dev
-# → http://localhost:3000
-```
-
-### Useful Prisma commands
-
-```bash
-npx prisma studio          # GUI to browse & edit database records
-npx prisma migrate reset   # ⚠ Wipe and re-apply migrations (dev only)
-npx prisma db push         # Push schema changes without a migration file
-```
-
-### npm scripts
-
-| Script | Command |
-|---|---|
-| `npm run dev` | Start dev server with hot reload |
-| `npm run build` | Production build |
-| `npm run start` | Run production build |
-| `npm run lint` | ESLint (flat config, Next.js rules) |
 
 ---
 
@@ -882,7 +933,7 @@ Update `NEXTAUTH_URL` to your production domain, and add the callback URL in Goo
 git clone https://github.com/your-org/cimage-hackathon.git
 cd cimage-hackathon/web-app
 cp .env.example .env   # fill in production values
-docker compose up -d --build
+docker compose up -d --build or npm run dev (for localhost)
 npx prisma db push     # or: docker compose exec app npx prisma db push
 ```
 
@@ -894,10 +945,15 @@ Push to the `main` branch — GitHub Actions will automatically build, push to G
 
 Built for **CIMAGE Hackathon 2026**.
 
+**Developer:** Shubham Kumar Mishra — *Patna College*
+
+
 ---
 
 <div align="center">
 
 **VMS** · CIMAGE Hackathon 2026 · Built with Next.js 16, Prisma, Upstash Redis & Tailwind CSS
+
+*Developed by **Shubham Kumar Mishra**, Patna College*
 
 </div>
